@@ -14,7 +14,7 @@ struct atributos
 {
     string label;
     string traducao;
-    string tipo; // Adiciona tipo ao atributo
+    string tipo; 
 };
 
 typedef struct
@@ -28,8 +28,8 @@ vector<TIPO_SIMBOLO> tabela_simbolos;
 int yylex(void);
 void yyerror(string);
 string gentempcode();
-void insere_simbolo(string nome, string tipo); // Função para inserir um símbolo na tabela de símbolos
-string busca_tipo(string nome); // Função para buscar o tipo de um símbolo na tabela de símbolos
+void insere_simbolo(string nome, string tipo);
+string busca_tipo(string nome); 
 %}
 
 %token TK_NUM

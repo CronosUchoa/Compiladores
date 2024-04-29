@@ -2,6 +2,8 @@ int main()
 {
 	int a;
 	float b;
+	char c;
+	c = '1';
 	b = 2.5;
 
 }
