@@ -26,13 +26,14 @@ string gentempcode();
 
 %start S
 
-%left '+'
+%left '+' '-'
+%right '='
 
 %%
 
 S 			: TK_TIPO_INT TK_MAIN '(' ')' BLOCO
 			{
-				string codigo = "/*Compilador FOCA*/\n"
+				string codigo = "/*Compilador BLUE*/\n"
 								"#include <iostream>\n"
 								"#include<string.h>\n"
 								"#include<stdio.h>\n"
@@ -65,7 +66,7 @@ COMANDOS	: COMANDO COMANDOS
 
 COMANDO 	: E ';'
 			{
-				$$ = $1;
+				$$.traducao = $1.traducao;
 			}
 			;
 
