@@ -2,7 +2,8 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-
+#include <vector>
+#include <map>
 #define YYSTYPE atributos
 
 using namespace std;
@@ -11,109 +12,119 @@ int var_temp_qnt;
 
 struct atributos
 {
-	string label;
-	string traducao;
+    string label;
+    string traducao;
+    string tipo; // Adiciona tipo ao atributo
 };
+
+typedef struct
+{
+    string nome;
+    string tipo;
+} TIPO_SIMBOLO;
+
+vector<TIPO_SIMBOLO> tabela_simbolos;
 
 int yylex(void);
 void yyerror(string);
 string gentempcode();
+void insere_simbolo(string nome, string tipo); // Função para inserir um símbolo na tabela de símbolos
+string busca_tipo(string nome); // Função para buscar o tipo de um símbolo na tabela de símbolos
 %}
 
-%token TK_MAIN TK_ID 
 %token TK_NUM
-%token TK_TIPO_INT TK_TIPO_BOOL TK_TIPO_FLOAT TK_TIPO_CHAR
-%token TK_OR TK_AND
-%token TK_MENOR_IGUAL TK_MAIOR_IGUAL TK_DIFERENTE TK_IGUALDADE TK_MAIS_MAIS TK_MENOS_MENOS 
-%token TK_POTENCIA TK_MAIS_IGUAL TK_MENOS_IGUAL TK_MULTI_IGUAL TK_DIV_IGUAL
+%token TK_MAIN TK_ID TK_TIPO_INT TK_TIPO_FLOAT TK_TIPO_CHAR
 %token TK_FIM TK_ERROR
 
 %start S
 
-%left '+' '-'
-%right '='
+%left '+'
 
 %%
 
-S 			: TK_TIPO_INT TK_MAIN '(' ')' BLOCO
-			{
-				string codigo = "/*Compilador BLUE*/\n"
-								"#include <iostream>\n"
-								"#include<string.h>\n"
-								"#include<stdio.h>\n"
-								"int main(void) {\n";
-								
-				codigo += $5.traducao;
-								
-				codigo += 	"\treturn 0;"
-							"\n}";
+S           : TK_TIPO_INT TK_MAIN '(' ')' BLOCO
+            {
+                string codigo = "/*Compilador Blue*/\n"
+                                "#include <iostream>\n"
+                                "#include<string.h>\n"
+                                "#include<stdio.h>\n"
+                                "int main(void) {\n";
+                                
+                codigo += $5.traducao;
+                                
+                codigo +=   "\treturn 0;"
+                            "\n}";
 
-				cout << codigo << endl;
-			}
-			;
+                cout << codigo << endl;
+            }
+            ;
 
-BLOCO		: '{' COMANDOS '}'
-			{
-				$$.traducao = $2.traducao;
-			}
-			;
+BLOCO       : '{' COMANDOS '}'
+            {
+                $$.traducao = $2.traducao;
+            }
+            ;
 
-COMANDOS	: COMANDO COMANDOS
-			{
-				$$.traducao = $1.traducao + $2.traducao;
-			}
-			|
-			{
-				$$.traducao = "";
-			}
-			;
+COMANDOS    : COMANDO COMANDOS
+            {
+                $$.traducao = $1.traducao + $2.traducao;
+            }
+            |
+            {
+                $$.traducao = "";
+            }
+            ;
 
-COMANDO 	: E ';'
+COMANDO     : E ';'
+            | TK_TIPO_INT TK_ID ';'
+            {
+                insere_simbolo($2.label, "int"); // Insere o símbolo na tabela de símbolos com tipo int
+            }
+			| TK_TIPO_FLOAT TK_ID ';'
+            {
+                insere_simbolo($2.label, "float"); // Insere o símbolo na tabela de símbolos com tipo int
+            }
+			| TK_TIPO_CHAR TK_ID ';'
 			{
-				$$.traducao = $1.traducao;
+				insere_simbolo($2.label, "char"); // Insere o símbolo na tabela de símbolos com tipo int
 			}
-			;
+            ;
 
-E 			: E '+' E
-			{
-				$$.label = gentempcode();
-				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
-					" = " + $1.label + " + " + $3.label + ";\n";
-			}
-			| E '-' E
-			{
-				$$.label = gentempcode();
-				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
-					" = " + $1.label + " - " + $3.label + ";\n";
-			}
-			| TK_ID '=' E
-			{
-				$$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
-			}
-			| TK_NUM
-			{
-				$$.label = gentempcode();
-				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
-			}
-			| TK_ID
-			{
-				$$.label = gentempcode();
-				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
-			}
-			|TK_TIPO_INT TK_ID
-			{	
-				$$.label = gentempcode();
-				$$.traducao = "\tint " + $$.label + ";\n\t" + $$.label + " = " + $2.label + ";\n";
-			}
-			|TK_TIPO_INT TK_ID '=' TK_NUM
-			{	
-				$$.label = gentempcode();
-				string temp_num = gentempcode();
-				$$.traducao = "\tint " + $$.label + ";\n\t"+"int " + temp_num + ";\n\t"
-				  +	$$.label  + " = " + $2.label + ";\n\t" + temp_num  + " = " +  $4.label + ";\n\t" 
-				  + $$.label + " = " + temp_num + ";\n\t";
-			}
-			;
+E           : E '+' E
+            {
+                $$.label = gentempcode();
+                $$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
+                    " = " + $1.label + " + " + $3.label + ";\n";
+            }
+            | E '-' E
+            {
+                $$.label = gentempcode();
+                $$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + 
+                    " = " + $1.label + " - " + $3.label + ";\n";
+            }
+            | TK_ID '=' E
+            {
+                if (busca_tipo($1.label) == "int" || "float" || "char") // Verifica o tipo do identificador na tabela de símbolos
+                    $$.traducao = $1.traducao + $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
+                else
+                    yyerror("Erro de tipo: Atribuição inválida.");
+            }
+            | TK_NUM
+            {
+                $$.label = gentempcode();
+                $$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+            }
+            | TK_ID
+            {
+                if (busca_tipo($1.label) == "int" || "float" || "char") // Verifica o tipo do identificador na tabela de símbolos
+                {
+                    $$.label = gentempcode();
+                    $$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+                }
+                else
+                    yyerror("Erro de tipo: Variável não declarada.");
+            }
+            ;
 
 %%
 
@@ -123,21 +134,39 @@ int yyparse();
 
 string gentempcode()
 {
-	var_temp_qnt++;
-	return "t" + to_string(var_temp_qnt);
+    var_temp_qnt++;
+    return "t" + to_string(var_temp_qnt);
+}
+
+void insere_simbolo(string nome, string tipo)
+{
+    TIPO_SIMBOLO simbolo;
+    simbolo.nome = nome;
+    simbolo.tipo = tipo;
+    tabela_simbolos.push_back(simbolo);
+}
+
+string busca_tipo(string nome)
+{
+    for (TIPO_SIMBOLO simbolo : tabela_simbolos)
+    {
+        if (simbolo.nome == nome)
+            return simbolo.tipo;
+    }
+    return ""; // Retorna uma string vazia se o símbolo não for encontrado
 }
 
 int main(int argc, char* argv[])
 {
-	var_temp_qnt = 0;
+    var_temp_qnt = 0;
 
-	yyparse();
+    yyparse();
 
-	return 0;
+    return 0;
 }
 
 void yyerror(string MSG)
 {
-	cout << MSG << endl;
-	exit (0);
-}				
+    cout << MSG << endl;
+    exit (0);
+}
