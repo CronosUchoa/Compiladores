@@ -1,5 +1,6 @@
-# Compiladores BLUE
+# Compilador BLUE
 O compilador foi criado para transformar o código criado em BLUE em um código intermediário na linguaguem c++ . É utilizado um padrão de três endereços para a criação dos códigos intermediários.
+
 ## Vídeos usados como recursos
 
 1. Flex: https://youtu.be/c9WLbVZ5T3w
