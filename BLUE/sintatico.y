@@ -100,6 +100,19 @@ E 			: E '+' E
 				$$.label = gentempcode();
 				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
 			}
+			|TK_TIPO_INT TK_ID
+			{	
+				$$.label = gentempcode();
+				$$.traducao = "\tint " + $$.label + ";\n\t" + $$.label + " = " + $2.label + ";\n";
+			}
+			|TK_TIPO_INT TK_ID '=' TK_NUM
+			{	
+				$$.label = gentempcode();
+				string temp_num = gentempcode();
+				$$.traducao = "\tint " + $$.label + ";\n\t"+"int " + temp_num + ";\n\t"
+				  +	$$.label  + " = " + $2.label + ";\n\t" + temp_num  + " = " +  $4.label + ";\n\t" 
+				  + $$.label + " = " + temp_num + ";\n\t";
+			}
 			;
 
 %%
